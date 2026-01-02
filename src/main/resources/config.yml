@@ -1,0 +1,41 @@
+# PurgeEvent Configuration
+# Auto-phase is disabled by default, use /purge autophase on to enable
+
+phases:
+  phase_1:
+    duration: 300
+    pvp-regions:
+      - "arena"
+      - "pvp_zone"
+  phase_2:
+    duration: 300
+
+messages:
+  phase-start:
+    phase_1: "&6&lPHASE 1 HAS STARTED! &7PvP enabled in designated regions only!"
+    phase_2: "&c&lPHASE 2 HAS STARTED! &7PvP enabled everywhere!"
+    inactive: "&e&lTHE PURGE HAS ENDED!"
+
+  phase-subtitle:
+    phase_1: "&eFight in designated zones!"
+    phase_2: "&cSurvive at all costs!"
+    inactive: "&7Thanks for playing!"
+
+  pvp-disabled: "&cPvP is disabled outside of designated regions in Phase 1!"
+
+death-messages:
+  player-kill:
+    - "&c{victim} &7was eliminated by &c{killer}"
+    - "&c{killer} &7has taken down &c{victim}"
+    - "&c{victim} &7fell to &c{killer}"
+    - "&c{killer} &7destroyed &c{victim}"
+    - "&c{victim} &7couldn't escape &c{killer}"
+    - "&c{killer} &7ended &c{victim}&7's journey"
+    - "&c{victim} &7was outplayed by &c{killer}"
+
+  natural-death:
+    - "&c{victim} &7has been eliminated"
+    - "&c{victim} &7met their demise"
+    - "&c{victim} &7is out of the game"
+    - "&c{victim} &7didn't make it"
+    - "&c{victim} &7has fallen"
