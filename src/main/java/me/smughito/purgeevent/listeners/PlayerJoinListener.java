@@ -3,7 +3,6 @@ package me.smughito.purgeevent.listeners;
 import me.smughito.purgeevent.PurgeEvent;
 import me.smughito.purgeevent.phases.GamePhase;
 import org.bukkit.GameMode;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -18,16 +17,13 @@ public class PlayerJoinListener implements Listener {
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-        Player player = event.getPlayer();
-        GamePhase currentPhase = plugin.getPhaseManager().getCurrentPhase();
+        var player = event.getPlayer();
 
-        if (currentPhase != GamePhase.INACTIVE && !player.isOp()) {
-            plugin.getPlayerDataManager().setAlive(player.getUniqueId(), true);
+        if (plugin.getPhaseManager().getCurrentPhase() != GamePhase.INACTIVE && !player.isOp()) {
             player.setGameMode(GameMode.SURVIVAL);
+            plugin.getPlayerDataManager().setAlive(player);
         }
 
-        if (currentPhase != GamePhase.INACTIVE) {
-            plugin.getScoreboardManager().updateScoreboard(player);
-        }
+        plugin.getScoreboardManager().updateScoreboard(player);
     }
 }

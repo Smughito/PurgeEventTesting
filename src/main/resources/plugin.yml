@@ -2,17 +2,28 @@ name: PurgeEvent
 version: 1.0.0
 main: me.smughito.purgeevent.PurgeEvent
 api-version: 1.19
-author: Smughito
 description: Dynamic PvP event system with phase-based gameplay
-depend: [WorldGuard]
+author: Smughito
+depend:
+  - WorldGuard
 
 commands:
   purge:
     description: Main command for PurgeEvent
     usage: /purge <start|stop|phase|autophase|reload>
+    aliases: [pe]
     permission: purge.admin
+
+  sc:
+    description: Spectator chat command
+    usage: /sc <message>
+    permission: purge.spectator
 
 permissions:
   purge.admin:
-    description: Allows access to all purge commands
+    description: Access to all purge commands
     default: op
+
+  purge.spectator:
+    description: Access to spectator chat
+    default: true

@@ -1,19 +1,15 @@
 package me.smughito.purgeevent.listeners;
 
-import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-import com.sk89q.worldguard.protection.regions.RegionContainer;
-import com.sk89q.worldguard.protection.regions.RegionQuery;
 import me.smughito.purgeevent.PurgeEvent;
 import me.smughito.purgeevent.phases.GamePhase;
+import me.smughito.purgeevent.utils.GradientUtil;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-
-import java.util.List;
 
 public class PvpListener implements Listener {
 
@@ -25,49 +21,52 @@ public class PvpListener implements Listener {
 
     @EventHandler
     public void onPvP(EntityDamageByEntityEvent event) {
-        if (!(event.getEntity() instanceof Player) || !(event.getDamager() instanceof Player)) {
+        if (!(event.getDamager() instanceof Player) || !(event.getEntity() instanceof Player)) {
             return;
         }
 
-        Player victim = (Player) event.getEntity();
         Player attacker = (Player) event.getDamager();
+        Player victim = (Player) event.getEntity();
 
-        GamePhase currentPhase = plugin.getPhaseManager().getCurrentPhase();
-
-        if (currentPhase != GamePhase.PHASE_1) {
+        if (plugin.getPhaseManager().getCurrentPhase() != GamePhase.PHASE_1) {
             return;
         }
 
-        if (isInPvpRegion(victim)) {
-            return;
+        if (!isInPvpRegion(attacker)) {
+            event.setCancelled(true);
+            String message = plugin.getConfig().getString("pvp.phase1-restriction-message",
+                "<#FF5555>PvP is disabled outside designated zones during Phase 1!");
+            attacker.sendMessage(GradientUtil.applyColor(message));
         }
-
-        event.setCancelled(true);
-        attacker.sendMessage(plugin.getConfig().getString("messages.pvp-disabled",
-            "§cPvP is disabled outside of designated regions in Phase 1!"));
     }
 
     private boolean isInPvpRegion(Player player) {
         try {
-            List<String> pvpRegions = plugin.getConfig().getStringList("phases.phase_1.pvp-regions");
+            var regionContainer = WorldGuard.getInstance().getPlatform().getRegionContainer();
+            var worldData = regionContainer.get(player.getWorld());
 
-            if (pvpRegions.isEmpty()) {
+            if (worldData == null) {
                 return false;
             }
 
-            RegionContainer container = WorldGuard.getInstance().getPlatform().getRegionContainer();
-            RegionQuery query = container.createQuery();
-            ApplicableRegionSet set = query.getApplicableRegions(BukkitAdapter.adapt(player.getLocation()));
+            ApplicableRegionSet regions = worldData.getApplicableRegions(
+                com.sk89q.worldedit.util.Location.create(
+                    player.getLocation().getX(),
+                    player.getLocation().getY(),
+                    player.getLocation().getZ()
+                )
+            );
 
-            for (ProtectedRegion region : set) {
-                if (pvpRegions.contains(region.getId())) {
+            for (String regionName : plugin.getConfig().getStringList("phases.phase-1.pvp-regions")) {
+                ProtectedRegion region = worldData.getRegion(regionName);
+                if (region != null && regions.getRegions().contains(region)) {
                     return true;
                 }
             }
-
-            return false;
         } catch (Exception e) {
-            return false;
+            plugin.getLogger().warning("Error checking PvP regions: " + e.getMessage());
         }
+
+        return false;
     }
 }

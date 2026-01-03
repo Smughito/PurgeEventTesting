@@ -2,13 +2,13 @@ package me.smughito.purgeevent.commands;
 
 import me.smughito.purgeevent.PurgeEvent;
 import me.smughito.purgeevent.phases.GamePhase;
+import me.smughito.purgeevent.utils.GradientUtil;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class PurgeCommands implements CommandExecutor, TabCompleter {
@@ -22,7 +22,7 @@ public class PurgeCommands implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!sender.hasPermission("purge.admin")) {
-            sender.sendMessage("§cYou don't have permission to use this command!");
+            sender.sendMessage(GradientUtil.applyColor("<#FF5555>You don't have permission to use this command!"));
             return true;
         }
 
@@ -31,37 +31,52 @@ public class PurgeCommands implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        switch (args[0].toLowerCase()) {
+        String subcommand = args[0].toLowerCase();
+
+        switch (subcommand) {
             case "start":
                 plugin.getPhaseManager().startEvent();
-                sender.sendMessage("§aPurge Event started! Phase 1 is now active.");
+                sender.sendMessage(GradientUtil.applyColor("<gradient:#00FF00:#00AA00>Purge Event started!</gradient>"));
                 break;
 
             case "stop":
-                plugin.getPhaseManager().setPhase(GamePhase.INACTIVE);
-                sender.sendMessage("§cPurge Event stopped!");
+                plugin.getPhaseManager().endEvent();
+                sender.sendMessage(GradientUtil.applyColor("<gradient:#FF0000:#AA0000>Purge Event stopped!</gradient>"));
                 break;
 
             case "phase":
                 if (args.length < 2) {
-                    sender.sendMessage("§cUsage: /purge phase <1|2>");
+                    sender.sendMessage(GradientUtil.applyColor("<#FF5555>Usage: /purge phase <1|2>"));
                     return true;
                 }
-                handlePhaseCommand(sender, args[1]);
+
+                try {
+                    int phaseNum = Integer.parseInt(args[1]);
+                    GamePhase phase = phaseNum == 1 ? GamePhase.PHASE_1 : GamePhase.PHASE_2;
+                    plugin.getPhaseManager().setPhase(phase);
+                    sender.sendMessage(GradientUtil.applyColor("<gradient:#FFD700:#FFA500>Phase changed to Phase " + phaseNum + "!</gradient>"));
+                } catch (NumberFormatException e) {
+                    sender.sendMessage(GradientUtil.applyColor("<#FF5555>Invalid phase number!"));
+                }
                 break;
 
             case "autophase":
+                boolean newState;
+
                 if (args.length < 2) {
-                    boolean current = plugin.getPhaseManager().isAutoPhaseEnabled();
-                    sender.sendMessage("§eAuto-phase is currently: " + (current ? "§aEnabled" : "§cDisabled"));
-                    return true;
+                    newState = !plugin.getPhaseManager().isAutoPhaseEnabled();
+                } else {
+                    newState = args[1].equalsIgnoreCase("on");
                 }
-                handleAutoPhaseCommand(sender, args[1]);
+
+                plugin.getPhaseManager().setAutoPhaseEnabled(newState);
+                String state = newState ? "enabled" : "disabled";
+                sender.sendMessage(GradientUtil.applyColor("<gradient:#FFD700:#FFA500>Auto-phase " + state + "!</gradient>"));
                 break;
 
             case "reload":
                 plugin.reloadConfig();
-                sender.sendMessage("§aConfiguration reloaded!");
+                sender.sendMessage(GradientUtil.applyColor("<gradient:#00FF00:#00AA00>Configuration reloaded!</gradient>"));
                 break;
 
             default:
@@ -72,70 +87,32 @@ public class PurgeCommands implements CommandExecutor, TabCompleter {
         return true;
     }
 
-    private void handlePhaseCommand(CommandSender sender, String phaseArg) {
-        GamePhase currentPhase = plugin.getPhaseManager().getCurrentPhase();
-
-        if (currentPhase == GamePhase.INACTIVE) {
-            sender.sendMessage("§cPlease start the event first with /purge start");
-            return;
-        }
-
-        switch (phaseArg) {
-            case "1":
-                plugin.getPhaseManager().setPhase(GamePhase.PHASE_1);
-                sender.sendMessage("§aPhase changed to Phase 1!");
-                break;
-            case "2":
-                plugin.getPhaseManager().setPhase(GamePhase.PHASE_2);
-                sender.sendMessage("§aPhase changed to Phase 2!");
-                break;
-            default:
-                sender.sendMessage("§cInvalid phase! Use 1 or 2.");
-                break;
-        }
-    }
-
-    private void handleAutoPhaseCommand(CommandSender sender, String arg) {
-        switch (arg.toLowerCase()) {
-            case "on":
-            case "enable":
-            case "true":
-                plugin.getPhaseManager().setAutoPhaseEnabled(true);
-                sender.sendMessage("§aAuto-phase enabled! Phases will progress automatically.");
-                break;
-            case "off":
-            case "disable":
-            case "false":
-                plugin.getPhaseManager().setAutoPhaseEnabled(false);
-                sender.sendMessage("§cAuto-phase disabled! Use /purge phase to manually change phases.");
-                break;
-            default:
-                sender.sendMessage("§cUsage: /purge autophase <on|off>");
-                break;
-        }
-    }
-
     private void sendHelp(CommandSender sender) {
-        sender.sendMessage("§6§l===== PurgeEvent Commands =====");
-        sender.sendMessage("§e/purge start §7- Start the purge event (Phase 1)");
-        sender.sendMessage("§e/purge stop §7- Stop the event");
-        sender.sendMessage("§e/purge phase <1|2> §7- Manually set the phase");
-        sender.sendMessage("§e/purge autophase [on|off] §7- Toggle/view auto-phase");
-        sender.sendMessage("§e/purge reload §7- Reload configuration");
+        sender.sendMessage(GradientUtil.applyColor("<gradient:#FFD700:#FFA500>==================== Purge Event Commands ====================</gradient>"));
+        sender.sendMessage(GradientUtil.applyColor("<#FFAA00>/purge start <#FFFFFF>- Start the Purge Event"));
+        sender.sendMessage(GradientUtil.applyColor("<#FFAA00>/purge stop <#FFFFFF>- Stop the Purge Event"));
+        sender.sendMessage(GradientUtil.applyColor("<#FFAA00>/purge phase <1|2> <#FFFFFF>- Change the phase"));
+        sender.sendMessage(GradientUtil.applyColor("<#FFAA00>/purge autophase [on|off] <#FFFFFF>- Toggle auto-phase progression"));
+        sender.sendMessage(GradientUtil.applyColor("<#FFAA00>/purge reload <#FFFFFF>- Reload configuration"));
+        sender.sendMessage(GradientUtil.applyColor("<gradient:#FFD700:#FFA500>================================================================</gradient>"));
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+    public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
         List<String> completions = new ArrayList<>();
 
         if (args.length == 1) {
-            completions.addAll(Arrays.asList("start", "stop", "phase", "autophase", "reload"));
-        } else if (args.length == 2) {
-            if (args[0].equalsIgnoreCase("phase")) {
-                completions.addAll(Arrays.asList("1", "2"));
-            } else if (args[0].equalsIgnoreCase("autophase")) {
-                completions.addAll(Arrays.asList("on", "off"));
-            }
+            completions.add("start");
+            completions.add("stop");
+            completions.add("phase");
+            completions.add("autophase");
+            completions.add("reload");
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("phase")) {
+            completions.add("1");
+            completions.add("2");
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("autophase")) {
+            completions.add("on");
+            completions.add("off");
         }
 
         return completions;
